@@ -1,6 +1,16 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
 <title>Спринти</title>
 <meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Спринти">
+<meta name="theme-color" content="#EEF1F0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1513" media="(prefers-color-scheme: dark)">
+</head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
 <style>
@@ -104,14 +114,20 @@ h3.sub{font-size:14px;margin:0}
     <h1>Спринти</h1>
     <p>Щомісяця 3–5 маленьких цілей у різних сферах і одна фінансова віха. Відмічай виконане щонеділі, капітал записуй 1-го числа.</p>
     <p class="note" id="who" hidden></p>
+    <form id="pwForm" hidden>
+      <input type="password" id="pwNew" placeholder="Новий пароль, мін. 8 символів" aria-label="Новий пароль" autocomplete="new-password" minlength="8" style="flex:1 1 200px">
+      <button class="btn" type="submit">Зберегти пароль</button>
+      <span class="note" id="pwMsg"></span>
+    </form>
   </header>
 
   <section class="panel" id="authPanel" hidden>
     <h2>Вхід</h2>
-    <p class="note">Введи пошту, і тобі прийде посилання для входу. Дані бачиш тільки ти.</p>
+    <p class="note">Увійди поштою і паролем. Якщо пароля ще немає, залиш поле порожнім, і на пошту прийде посилання для входу.</p>
     <form id="authForm">
-      <input type="email" id="authEmail" placeholder="email@example.com" aria-label="Пошта" required style="flex:1 1 220px">
-      <button class="btn" type="submit">Надіслати посилання</button>
+      <input type="email" id="authEmail" placeholder="email@example.com" aria-label="Пошта" autocomplete="username" required style="flex:1 1 220px">
+      <input type="password" id="authPass" placeholder="Пароль" aria-label="Пароль" autocomplete="current-password" style="flex:1 1 160px">
+      <button class="btn" type="submit" id="authBtn">Увійти</button>
     </form>
     <p class="note" id="authMsg"></p>
   </section>
@@ -257,6 +273,8 @@ h3.sub{font-size:14px;margin:0}
   window.SBDB={
     async auth(){const {data}=await sb.auth.getSession();const s=data.session;return {session:s,email:s&&s.user&&s.user.email}},
     async signIn(email){const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.href.split("#")[0].split("?")[0],shouldCreateUser:!C.singleUserEmail||email===C.singleUserEmail}});return error&&error.message},
+    async signInPassword(email,password){const {error}=await sb.auth.signInWithPassword({email,password});return error&&error.message},
+    async setPassword(password){const {error}=await sb.auth.updateUser({password});return error&&error.message},
     async signOut(){await sb.auth.signOut();location.reload()},
     async open(){await loadAll();
       document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")loadAll().catch(()=>{})});
@@ -542,12 +560,22 @@ h3.sub{font-size:14px;margin:0}
     if(!window.SBDB){$("spTitle").textContent="Не налаштовано Supabase (див. README)";return}
     const auth=await window.SBDB.auth();
     if(!auth.session){$("authPanel").hidden=false;$("spTitle").textContent="Увійди, щоб бачити план";
-      $("authForm").addEventListener("submit",async e=>{e.preventDefault();$("authMsg").textContent="Надсилаю…";
-        const err=await window.SBDB.signIn($("authEmail").value.trim());
-        $("authMsg").textContent=err?"Помилка: "+err:"Перевір пошту і відкрий посилання на цьому пристрої."});
+      $("authPass").addEventListener("input",()=>{$("authBtn").textContent=$("authPass").value?"Увійти":"Надіслати посилання"});
+      $("authBtn").textContent="Надіслати посилання";
+      $("authForm").addEventListener("submit",async e=>{e.preventDefault();const em=$("authEmail").value.trim(),pw=$("authPass").value;
+        if(pw){$("authMsg").textContent="Входжу…";const err=await window.SBDB.signInPassword(em,pw);
+          if(err)$("authMsg").textContent=err.includes("Invalid")?"Невірна пошта або пароль.":"Помилка: "+err;else location.reload();return}
+        $("authMsg").textContent="Надсилаю…";
+        const err=await window.SBDB.signIn(em);
+        $("authMsg").textContent=err?"Помилка: "+err:"Перевір пошту і відкрий посилання в Safari. Для іконки на екрані «Додому» краще встанови пароль."});
       return}
     $("who").hidden=false;$("who").innerHTML="";$("who").append(document.createTextNode(auth.email+" · "));
     const out=document.createElement("button");out.className="del";out.type="button";out.textContent="Вийти";out.onclick=()=>window.SBDB.signOut();$("who").append(out);
+    $("who").append(document.createTextNode(" · "));const pwb=document.createElement("button");pwb.className="del";pwb.type="button";pwb.textContent="Пароль";
+    pwb.onclick=()=>{$("pwForm").hidden=!$("pwForm").hidden;if(!$("pwForm").hidden)$("pwNew").focus()};$("who").append(pwb);
+    $("pwForm").addEventListener("submit",async e=>{e.preventDefault();const pw=$("pwNew").value;if(pw.length<8){$("pwMsg").textContent="Мінімум 8 символів.";return}
+      $("pwMsg").textContent="Зберігаю…";const err=await window.SBDB.setPassword(pw);
+      $("pwMsg").textContent=err?"Помилка: "+err:"Пароль збережено. Тепер можна входити з іконки.";if(!err){$("pwNew").value="";setTimeout(()=>{$("pwForm").hidden=true;$("pwMsg").textContent=""},2500)}});
     const timer=setTimeout(()=>{if(!st.loaded)$("spTitle").textContent="Не вдається завантажити план. Перевір з'єднання."},10000);
     db=await window.SBDB.open();
     st.canWrite=true;
