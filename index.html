@@ -1,0 +1,566 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Спринти</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one column of stacked "panels" — current sprint first, capital second, roadmap third. */
+:root{
+  --bg:#EEF1F0; --panel:#FFFFFF; --fg:#13201B; --muted:#5E6B66; --line:#D7DEDB;
+  --accent:#2448D8; --accent-soft:#E3E8FB; --done:#1E8A5A; --done-soft:#DDF1E7; --warn:#B86A00;
+  --a-fin:#2448D8; --a-car:#8A4BD0; --a-odoo:#C2410C; --a-hea:#1E8A5A; --a-fam:#C0306B; --a-oth:#5E6B66;
+  --f-display:"Unbounded","Golos Text",system-ui,sans-serif;
+  --f-body:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-num:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1513; --panel:#16201D; --fg:#E6EEEA; --muted:#93A39C; --line:#26332F;
+  --accent:#7D98FF; --accent-soft:#1D2747; --done:#4CC98E; --done-soft:#143426; --warn:#F0A43A;
+  --a-fin:#7D98FF; --a-car:#B98CF0; --a-odoo:#F08A4B; --a-hea:#4CC98E; --a-fam:#F07AA8; --a-oth:#93A39C;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1513; --panel:#16201D; --fg:#E6EEEA; --muted:#93A39C; --line:#26332F;
+  --accent:#7D98FF; --accent-soft:#1D2747; --done:#4CC98E; --done-soft:#143426; --warn:#F0A43A;
+  --a-fin:#7D98FF; --a-car:#B98CF0; --a-odoo:#F08A4B; --a-hea:#4CC98E; --a-fam:#F07AA8; --a-oth:#93A39C;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2{font-family:var(--f-display);font-weight:700;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(26px,5vw,36px)}
+h2{font-size:18px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+header{display:flex;flex-direction:column;gap:6px}
+header p{margin:0;color:var(--muted);max-width:60ch}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:baseline;justify-content:space-between}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.stat{display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat b{font-family:var(--f-num);font-size:24px;font-weight:500}
+.stat span{font-size:12px;color:var(--muted)}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .4s}
+.bar.done i{background:var(--done)}
+.goals{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.goal{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+.goal:first-child{border-top:0}
+.goal .txt{min-width:0;display:flex;flex-direction:column;gap:2px}
+.goal .txt span{overflow-wrap:anywhere}
+.goal.is-done .txt span{color:var(--muted);text-decoration:line-through}
+.chk{width:24px;height:24px;border-radius:7px;border:2px solid var(--line);background:transparent;cursor:pointer;display:grid;place-items:center;color:transparent;padding:0}
+.chk:hover{border-color:var(--done)}
+.is-done .chk{background:var(--done);border-color:var(--done);color:var(--panel)}
+.chk:disabled{cursor:default}
+.area{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.del{border:0;background:none;color:var(--muted);cursor:pointer;font:inherit;font-size:13px;padding:4px 6px;border-radius:6px}
+.del:hover{color:var(--fg);background:var(--bg)}
+.del.confirm{color:#fff;background:var(--warn)}
+form{display:flex;gap:8px;flex-wrap:wrap}
+input,select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 11px;min-width:0}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+form input[type=text]{flex:1 1 220px}
+.btn{font:inherit;font-weight:600;border:0;border-radius:9px;padding:9px 16px;background:var(--accent);color:#fff;cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.chartbox{overflow-x:auto}
+svg text{fill:var(--muted);font-family:var(--f-num);font-size:11px}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.road{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sp{border:1px solid var(--line);border-radius:11px;padding:12px;display:flex;flex-direction:column;gap:4px;cursor:pointer;background:transparent;color:inherit;font:inherit;text-align:left}
+.sp:hover{border-color:var(--accent)}
+.sp.sel{border-color:var(--accent);background:var(--accent-soft)}
+.sp .t{font-weight:600}
+.sp .d{font-size:12px;color:var(--muted)}
+.pill{align-self:flex-start;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--line);color:var(--muted)}
+.pill.now{background:var(--accent);color:#fff}
+.pill.ok{background:var(--done-soft);color:var(--done)}
+.note{font-size:13px;color:var(--muted)}
+.rules{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;color:var(--muted);max-width:65ch}
+.rules b{color:var(--fg);font-weight:600}
+.empty{color:var(--muted);padding:8px 0}
+.days{display:grid;grid-template-columns:repeat(auto-fill,minmax(22px,1fr));gap:5px}
+.day{aspect-ratio:1;max-width:100%;border-radius:5px;border:1px solid var(--line);background:transparent;padding:0;cursor:pointer;font:inherit;font-size:9px;color:var(--muted);font-family:var(--f-num)}
+.day.on{background:var(--a-odoo);border-color:var(--a-odoo);color:var(--panel)}
+.day.today{outline:2px solid var(--fg);outline-offset:1px}
+.day:disabled{opacity:.35;cursor:default}
+.pill.st{border:0;cursor:pointer;font-family:inherit;align-self:center;white-space:nowrap}
+.pill.st:disabled{cursor:default}
+.ideacard{border:1px solid var(--line);border-radius:11px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;background:var(--bg)}
+.ideacard h3{font-family:var(--f-display);font-size:16px;margin:0;text-wrap:balance}
+.ideacard p{margin:0;color:var(--muted);overflow-wrap:anywhere}
+h3.sub{font-size:14px;margin:0}
+.btn:disabled{opacity:.6;cursor:default}
+.wrow{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.wrow:first-child{border-top:0}
+@media (max-width:560px){.stats{grid-template-columns:1fr 1fr}.road{grid-template-columns:1fr 1fr}.stat b{font-size:20px}}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Місячні спринти · листопад 2026 — грудень 2027</span>
+    <h1>Спринти</h1>
+    <p>Щомісяця 3–5 маленьких цілей у різних сферах і одна фінансова віха. Відмічай виконане щонеділі, капітал записуй 1-го числа.</p>
+    <p class="note" id="who" hidden></p>
+  </header>
+
+  <section class="panel" id="authPanel" hidden>
+    <h2>Вхід</h2>
+    <p class="note">Введи пошту, і тобі прийде посилання для входу. Дані бачиш тільки ти.</p>
+    <form id="authForm">
+      <input type="email" id="authEmail" placeholder="email@example.com" aria-label="Пошта" required style="flex:1 1 220px">
+      <button class="btn" type="submit">Надіслати посилання</button>
+    </form>
+    <p class="note" id="authMsg"></p>
+  </section>
+
+  <section class="panel" id="sprintPanel" aria-live="polite">
+    <div class="row">
+      <div>
+        <div class="eyebrow" id="spLabel">Спринт</div>
+        <h2 id="spTitle">Завантажую план…</h2>
+      </div>
+      <span class="pill" id="spPill"></span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="stScore">—</b><span>цілей виконано</span></div>
+      <div class="stat"><b id="stDays">—</b><span id="stDaysLbl">днів до кінця</span></div>
+      <div class="stat"><b id="stTarget">—</b><span>віха капіталу</span></div>
+    </div>
+    <div class="bar" id="scoreBar"><i style="width:0%"></i></div>
+    <ul class="goals" id="goals"><li class="empty">Цілі з'являться тут, щойно план завантажиться.</li></ul>
+    <form id="addForm" hidden>
+      <select id="addArea" aria-label="Сфера">
+        <option value="fin">Фінанси</option><option value="car">Кар'єра</option><option value="odoo">Odoo</option>
+        <option value="hea">Здоров'я</option><option value="oth">Інше</option>
+      </select>
+      <input type="text" id="addText" placeholder="Нова маленька ціль, наприклад «2 тренування на тиждень»" aria-label="Нова ціль" maxlength="140">
+      <button class="btn" type="submit">Додати</button>
+    </form>
+    <p class="note" id="scoreNote"></p>
+  </section>
+
+  <section class="panel">
+    <div class="row">
+      <h2>Odoo · 30 хв на день</h2>
+      <button class="btn" type="button" id="hbBtn" hidden>Сьогодні зроблено</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="hbStreak">—</b><span>днів поспіль</span></div>
+      <div class="stat"><b id="hbSprint">—</b><span id="hbSprintLbl">днів у спринті</span></div>
+      <div class="stat"><b id="hbTotal">—</b><span>годин загалом</span></div>
+    </div>
+    <div class="days" id="hbDays" aria-label="Дні спринту"></div>
+    <p class="note">Кожен квадрат — день вибраного спринту. Натисни на минулий день, щоб відмітити його заднім числом.</p>
+  </section>
+
+  <section class="panel">
+    <div class="row">
+      <h2>Ідея для вайбкодингу</h2>
+      <button class="btn" type="button" id="ideaNew">Інша ідея</button>
+    </div>
+    <div class="ideacard" aria-live="polite">
+      <div class="eyebrow" id="ideaMeta">ідея дня</div>
+      <h3 id="ideaTitle">…</h3>
+      <p id="ideaDesc"></p>
+      <div class="row" style="justify-content:flex-start"><button class="del" type="button" id="ideaSave" hidden>Зберегти в список</button></div>
+    </div>
+    <div class="row"><h3 class="sub">Збережені ідеї</h3><span class="note" id="idCount"></span></div>
+    <ul class="goals" id="ideas"><li class="empty">Тут будуть ідеї, які ти збережеш.</li></ul>
+    <p class="note">Натисни на статус, щоб перемкнути: ідея → в роботі → готово.</p>
+  </section>
+
+  <section class="panel">
+    <div class="row">
+      <h2>Вага</h2>
+      <span class="note" id="wNow"></span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="wLast">—</b><span>остання, кг</span></div>
+      <div class="stat"><b id="wDelta">—</b><span>від першого запису</span></div>
+      <div class="stat"><b id="w30">—</b><span>за 30 днів</span></div>
+    </div>
+    <div class="chartbox"><svg id="wChart" viewBox="0 0 720 220" width="100%" role="img" aria-label="Графік ваги"></svg></div>
+    <form id="wForm" hidden>
+      <input type="date" id="wDate" aria-label="Дата">
+      <input type="number" id="wKg" placeholder="Вага, кг" aria-label="Вага в кілограмах" min="20" max="300" step="0.1" inputmode="decimal" style="flex:1 1 120px">
+      <button class="btn" type="submit">Записати</button>
+    </form>
+    <ul class="goals" id="wList"></ul>
+  </section>
+
+  <section class="panel">
+    <div class="row">
+      <h2>Капітал</h2>
+      <span class="note" id="capNow"></span>
+    </div>
+    <div class="chartbox"><svg id="chart" viewBox="0 0 720 260" width="100%" role="img" aria-label="Графік капіталу проти плану"></svg></div>
+    <div class="legend"><span><i style="background:var(--accent)"></i>факт</span><span><i style="background:var(--muted);opacity:.6"></i>план</span></div>
+    <form id="capForm" hidden>
+      <input type="month" id="capMonth" aria-label="Місяць">
+      <input type="number" id="capEur" placeholder="В євро, €" aria-label="Сума в євро" min="0" step="any" inputmode="decimal" style="flex:1 1 120px">
+      <input type="number" id="capUsd" placeholder="В доларах, $" aria-label="Сума в доларах" min="0" step="any" inputmode="decimal" style="flex:1 1 120px">
+      <label class="note" style="display:flex;align-items:center;gap:6px">1 $ = <input type="number" id="capRate" value="" placeholder="авто" min="0" step="0.0001" inputmode="decimal" aria-label="Курс долара в євро" style="width:90px"> €</label>
+      <button class="btn" type="submit">Записати</button>
+    </form>
+    <p class="note" id="capSum" style="color:var(--fg);font-weight:600"></p>
+    <p class="note">Рахуй увесь капітал: банк, крипту, USDT. Долари і USDT перераховуються в євро за курсом зліва, і сторінка його запам’ятовує.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Дорожня карта</h2>
+    <div class="road" id="road"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Правила</h2>
+    <ol class="rules">
+      <li><b>3–5 цілей на місяць</b>, кожна маленька і бінарна: зроблено або ні.</li>
+      <li><b>Odoo щодня по 30 хвилин.</b> 22 дні з місяця — це добрий результат, пропуски нормальні.</li>
+      <li><b>Щонеділі 10 хвилин:</b> відмітити виконане, вибрати, що робиш цього тижня.</li>
+      <li><b>70–80% — добрий спринт.</b> 100% означає, що цілі були надто легкі.</li>
+      <li><b>Невиконане не переноситься автоматично.</b> На старті спринту вирішуєш, чи воно ще важливе.</li>
+      <li><b>Нова ідея посеред спринту</b> записується на наступний, а не додається в поточний.</li>
+    </ol>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+/* Тонкий шар над Supabase: та сама форма API, що була в Claude (collection/doc/onSnapshot). Усі дані в одній таблиці docs. */
+(function(){
+  const C=window.APP_CONFIG||{};
+  if(!window.supabase||!C.supabaseUrl||C.supabaseUrl.includes("YOUR"))return;
+  const sb=window.supabase.createClient(C.supabaseUrl,C.supabaseAnonKey,{auth:{persistSession:true,detectSessionInUrl:true,flowType:"pkce"}});
+  const cache=new Map(); const colL=new Map(); const docL=new Map();
+  const get=c=>{if(!cache.has(c))cache.set(c,new Map());return cache.get(c)};
+  const snapCol=c=>({docs:[...get(c)].map(([id,d])=>({id,data:()=>({...d})}))});
+  const snapDoc=(c,id)=>{const d=get(c).get(id);return {exists:!!d,id,data:()=>d?{...d}:undefined}};
+  const emit=c=>{(colL.get(c)||[]).forEach(f=>f(snapCol(c)));for(const [k,fs] of docL){const [cc,id]=k.split("/");if(cc===c)fs.forEach(f=>f(snapDoc(c,id)))}};
+  async function loadAll(){const {data,error}=await sb.from("docs").select("col,id,data");if(error)throw error;
+    const seen=new Set([...cache.keys()]);cache.clear();for(const r of data)get(r.col).set(r.id,r.data);
+    new Set([...seen,...cache.keys(),...colL.keys(),...[...docL.keys()].map(k=>k.split("/")[0])]).forEach(emit)}
+  async function put(c,id,d){get(c).set(id,d);emit(c);const {error}=await sb.from("docs").upsert({col:c,id,data:d,updated_at:new Date().toISOString()},{onConflict:"owner,col,id"});if(error){await loadAll();throw error}}
+  async function del(c,id){get(c).delete(id);emit(c);const {error}=await sb.from("docs").delete().eq("col",c).eq("id",id);if(error){await loadAll();throw error}}
+  const doc=p=>{const [c,id]=p.split("/");return {
+    set:d=>put(c,id,{...d}),
+    update:d=>put(c,id,{...(get(c).get(id)||{}),...d}),
+    delete:()=>del(c,id),
+    onSnapshot:(f)=>{const k=c+"/"+id;if(!docL.has(k))docL.set(k,[]);docL.get(k).push(f);f(snapDoc(c,id));return()=>{}}}};
+  const collection=c=>({
+    add:d=>{const id=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));return put(c,id,{...d}).then(()=>({id}))},
+    doc:id=>doc(c+"/"+id),
+    onSnapshot:(f)=>{if(!colL.has(c))colL.set(c,[]);colL.get(c).push(f);f(snapCol(c));return()=>{}}});
+  window.SBDB={
+    async auth(){const {data}=await sb.auth.getSession();const s=data.session;return {session:s,email:s&&s.user&&s.user.email}},
+    async signIn(email){const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.href.split("#")[0].split("?")[0],shouldCreateUser:!C.singleUserEmail||email===C.singleUserEmail}});return error&&error.message},
+    async signOut(){await sb.auth.signOut();location.reload()},
+    async open(){await loadAll();
+      document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")loadAll().catch(()=>{})});
+      return {doc,collection}}
+  };
+})();
+</script>
+<script>
+(function(){
+  const AREAS={fin:["Фінанси","--a-fin"],car:["Кар'єра","--a-car"],odoo:["Odoo","--a-odoo"],hea:["Здоров'я","--a-hea"],fam:["Сім'я","--a-fam"],oth:["Інше","--a-oth"]};
+  const MONTHS=["січ","лют","бер","кві","тра","чер","лип","сер","вер","жов","лис","гру"];
+  const st={sprints:[],goals:[],capital:[],meta:null,habit:{days:[]},ideas:[],weight:[],sel:null,canWrite:false,loaded:false};
+  let db=null;
+  const $=id=>document.getElementById(id);
+  const fmt=n=>Math.round(n).toLocaleString("uk-UA").replace(/ /g," ");
+  const fmtK=n=>(n/1000).toFixed(n%1000?1:0).replace(".0","")+"k";
+  const d=s=>new Date(s+"T00:00:00");
+  const dd=s=>{const x=d(s);return x.getDate()+" "+MONTHS[x.getMonth()]};
+  const today=new Date(); today.setHours(0,0,0,0);
+
+  function activeSprint(){
+    const s=st.sprints.find(s=>d(s.start)<=today&&today<=d(s.end));
+    return s||st.sprints.find(s=>d(s.start)>today)||st.sprints[st.sprints.length-1];
+  }
+  function score(n){const g=st.goals.filter(x=>x.sprint===n);return {total:g.length,done:g.filter(x=>x.done).length}}
+
+  function renderSprint(){
+    const s=st.sprints.find(x=>x.n===st.sel);
+    if(!s){ if(st.loaded){$("spTitle").textContent="План ще порожній";$("goals").innerHTML='<li class="empty">Спринти ще не додані.</li>'} return }
+    const status=d(s.end)<today?"past":d(s.start)>today?"future":"now";
+    $("spLabel").textContent="Спринт "+s.n;
+    $("spTitle").textContent=dd(s.start)+" — "+dd(s.end)+" "+d(s.end).getFullYear();
+    const pill=$("spPill"); pill.className="pill"+(status==="now"?" now":status==="past"?" ok":"");
+    pill.textContent=status==="now"?"зараз":status==="past"?"завершено":"попереду";
+    const sc=score(s.n), pct=sc.total?Math.round(sc.done/sc.total*100):0;
+    $("stScore").textContent=sc.done+" / "+sc.total;
+    const days=Math.round((d(s.end)-today)/864e5);
+    if(status==="now"){$("stDays").textContent=days;$("stDaysLbl").textContent="днів до кінця"}
+    else if(status==="future"){$("stDays").textContent=Math.round((d(s.start)-today)/864e5);$("stDaysLbl").textContent="днів до старту"}
+    else{$("stDays").textContent="✓";$("stDaysLbl").textContent="спринт закрито"}
+    $("stTarget").textContent=fmtK(s.target)+" €";
+    const bar=$("scoreBar"); bar.classList.toggle("done",pct>=70); bar.firstElementChild.style.width=pct+"%";
+    $("scoreNote").textContent=!sc.total?"":pct>=100?"Усе виконано. Наступного разу можна взяти трохи амбітніші цілі.":pct>=70?pct+"% — добрий спринт.":"Ціль спринту — 70–80%. Зараз "+pct+"%.";
+    const ul=$("goals"); ul.innerHTML="";
+    const list=st.goals.filter(x=>x.sprint===s.n).sort((a,b)=>(a.order??0)-(b.order??0));
+    if(!list.length){ul.innerHTML='<li class="empty">Цілей на цей спринт ще немає'+(st.canWrite?". Додай першу нижче.":".")+'</li>'}
+    for(const g of list){
+      const li=document.createElement("li"); li.className="goal"+(g.done?" is-done":"");
+      const b=document.createElement("button"); b.className="chk"; b.type="button"; b.innerHTML='<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 7.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      b.setAttribute("aria-label",(g.done?"Зняти відмітку: ":"Відмітити виконаним: ")+g.text); b.disabled=!st.canWrite;
+      b.onclick=()=>db&&db.doc("goals/"+g.id).update({done:!g.done}).catch(()=>{});
+      const t=document.createElement("div"); t.className="txt";
+      const a=AREAS[g.area]||AREAS.oth; const lab=document.createElement("span"); lab.className="area"; lab.style.color="var("+a[1]+")"; lab.textContent=a[0];
+      const tx=document.createElement("span"); tx.textContent=g.text; t.append(lab,tx);
+      li.append(b,t);
+      if(st.canWrite){const del=document.createElement("button");del.className="del";del.type="button";del.textContent="Видалити";
+        del.onclick=()=>{if(!del.classList.contains("confirm")){del.classList.add("confirm");del.textContent="Точно?";setTimeout(()=>{del.classList.remove("confirm");del.textContent="Видалити"},3000);return}
+          db.doc("goals/"+g.id).delete().catch(()=>{})};li.append(del)} else li.append(document.createElement("span"));
+      ul.append(li);
+    }
+    $("addForm").hidden=!st.canWrite;
+  }
+
+  function renderRoad(){
+    const r=$("road"); r.innerHTML="";
+    for(const s of st.sprints){
+      const sc=score(s.n), status=d(s.end)<today?"past":d(s.start)>today?"future":"now";
+      const b=document.createElement("button"); b.type="button"; b.className="sp"+(s.n===st.sel?" sel":"");
+      const pct=sc.total?Math.round(sc.done/sc.total*100):0;
+      b.innerHTML='<span class="pill'+(status==="now"?" now":status==="past"?" ok":"")+'"></span><span class="t"></span><span class="d"></span><span class="d num"></span>';
+      b.children[0].textContent=status==="now"?"зараз":status==="past"?pct+"%":"попереду";
+      b.children[1].textContent="Спринт "+s.n+" · "+fmtK(s.target)+" €";
+      b.children[2].textContent=dd(s.start)+" — "+dd(s.end);
+      b.children[3].textContent=sc.total?sc.done+" / "+sc.total+" цілей":"цілі ще не задані";
+      b.onclick=()=>{st.sel=s.n;renderAll()};
+      r.append(b);
+    }
+  }
+
+  function renderChart(){
+    const svg=$("chart"); const W=720,H=260,L=48,R=16,T=14,B=30;
+    const m=st.meta; if(!m||!st.sprints.length){svg.innerHTML='<text x="'+W/2+'" y="'+H/2+'" text-anchor="middle">Графік з\'явиться після першого запису капіталу</text>';return}
+    const mi=s=>{const [y,mo]=s.split("-").map(Number);return y*12+mo-1};
+    const m0=mi(m.startMonth), m1=mi(st.sprints[st.sprints.length-1].end.slice(0,7));
+    const plan=[[m0,m.startCapital],...st.sprints.map(s=>[mi(s.end.slice(0,7)),s.target])];
+    const act=st.capital.map(c=>[mi(c.month),c.amount]).filter(p=>p[0]>=m0&&p[0]<=m1).sort((a,b)=>a[0]-b[0]);
+    const vals=[...plan.map(p=>p[1]),...act.map(p=>p[1])];
+    let lo=Math.floor(Math.min(...vals)/5000)*5000, hi=Math.ceil(Math.max(...vals)/5000)*5000; if(hi===lo)hi+=5000;
+    const x=v=>L+(v-m0)/(m1-m0)*(W-L-R), y=v=>T+(1-(v-lo)/(hi-lo))*(H-T-B);
+    let s="";
+    for(let v=lo;v<=hi;v+=5000){s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--line)" stroke-width="1"/><text x="'+(L-8)+'" y="'+(y(v)+4)+'" text-anchor="end">'+fmtK(v)+'</text>'}
+    for(let k=m0;k<=m1;k+=2){const mo=k%12;s+='<text x="'+x(k)+'" y="'+(H-8)+'" text-anchor="middle">'+MONTHS[mo]+(mo===0?" "+String(Math.floor(k/12)).slice(2):"")+'</text>'}
+    s+='<polyline fill="none" stroke="var(--muted)" stroke-opacity=".6" stroke-width="2" stroke-dasharray="5 5" points="'+plan.map(p=>x(p[0])+","+y(p[1])).join(" ")+'"/>';
+    for(const p of plan.slice(1)) s+='<circle cx="'+x(p[0])+'" cy="'+y(p[1])+'" r="3.5" fill="var(--panel)" stroke="var(--muted)" stroke-width="1.5"/>';
+    if(act.length){
+      const pts=act.map(p=>x(p[0])+","+y(p[1])).join(" ");
+      if(act.length>1) s+='<polygon fill="var(--accent)" fill-opacity=".1" points="'+x(act[0][0])+","+y(lo)+" "+pts+" "+x(act[act.length-1][0])+","+y(lo)+'"/>';
+      s+='<polyline fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" points="'+pts+'"/>';
+      const e=act[act.length-1]; s+='<circle cx="'+x(e[0])+'" cy="'+y(e[1])+'" r="5" fill="var(--accent)"/><text x="'+Math.min(x(e[0]),W-R-40)+'" y="'+(y(e[1])-12)+'" text-anchor="middle" style="fill:var(--fg)">'+fmtK(e[1])+'</text>';
+    }
+    svg.innerHTML=s;
+    const last=[...st.capital].sort((a,b)=>a.month<b.month?1:-1)[0];
+    if(last){const [yy,mm]=last.month.split("-");$("capNow").textContent="Останній запис: "+fmt(last.amount)+" €"+(last.usd?" (з них "+fmt(last.usd)+" $)":"")+" · "+MONTHS[+mm-1]+" "+yy}
+  }
+
+  const iso=x=>x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0");
+  function setDay(day,on){
+    if(!db||!st.canWrite)return;
+    const set=new Set(st.habit.days||[]); on?set.add(day):set.delete(day);
+    db.doc("habits/odoo").set({title:"Odoo 30 хв",minutes:30,days:[...set].sort()}).catch(()=>{});
+  }
+  function renderHabit(){
+    const days=new Set(st.habit.days||[]); const t=iso(today);
+    let streak=0; const c=new Date(today); if(!days.has(t))c.setDate(c.getDate()-1);
+    while(days.has(iso(c))){streak++;c.setDate(c.getDate()-1)}
+    $("hbStreak").textContent=streak; $("hbTotal").textContent=(days.size*0.5).toString().replace(".",",");
+    const s=st.sprints.find(x=>x.n===st.sel), box=$("hbDays"); box.innerHTML="";
+    const btn=$("hbBtn"); btn.hidden=!st.canWrite; btn.textContent=days.has(t)?"Сьогодні ✓":"Сьогодні зроблено";
+    btn.onclick=()=>setDay(t,!days.has(t));
+    if(!s){$("hbSprint").textContent="—";return}
+    let inS=0,total=0; const x=d(s.start);
+    while(x<=d(s.end)){
+      const k=iso(x); total++; if(days.has(k))inS++;
+      const b=document.createElement("button"); b.type="button"; b.className="day"+(days.has(k)?" on":"")+(k===t?" today":"");
+      b.textContent=x.getDate(); b.title=dd(k)+(days.has(k)?" · зроблено":"");
+      b.setAttribute("aria-label",dd(k)+(days.has(k)?", зроблено":", не відмічено"));
+      b.disabled=!st.canWrite||x>today; b.onclick=()=>setDay(k,!days.has(k));
+      box.append(b); x.setDate(x.getDate()+1);
+    }
+    $("hbSprint").textContent=inS+" / "+total; $("hbSprintLbl").textContent="днів у спринті (мета 22)";
+  }
+  const IST={idea:"ідея",wip:"в роботі",done:"готово"}, NEXT={idea:"wip",wip:"done",done:"idea"};
+  function renderIdeas(){
+    const ul=$("ideas"); ul.innerHTML="";
+    const ord={wip:0,idea:1,done:2};
+    const list=[...st.ideas].sort((a,b)=>(ord[a.status]??1)-(ord[b.status]??1)||(b.created||0)-(a.created||0));
+    $("idCount").textContent=list.length?"Ідей: "+list.length:"";
+    if(!list.length&&st.loaded) ul.innerHTML='<li class="empty">Ідей поки немає'+(st.canWrite?". Запиши першу нижче.":".")+'</li>';
+    for(const it of list){
+      const li=document.createElement("li"); li.className="goal"+(it.status==="done"?" is-done":"");
+      const p=document.createElement("button"); p.type="button"; p.className="pill st"+(it.status==="wip"?" now":it.status==="done"?" ok":"");
+      p.textContent=IST[it.status]||IST.idea; p.disabled=!st.canWrite; p.title="Змінити статус";
+      p.onclick=()=>db&&db.doc("ideas/"+it.id).update({status:NEXT[it.status]||"wip"}).catch(()=>{});
+      const t=document.createElement("div"); t.className="txt"; const tx=document.createElement("span"); tx.textContent=it.text; t.append(tx);
+      li.append(p,t);
+      if(st.canWrite){const del=document.createElement("button");del.className="del";del.type="button";del.textContent="Видалити";
+        del.onclick=()=>{if(!del.classList.contains("confirm")){del.classList.add("confirm");del.textContent="Точно?";setTimeout(()=>{del.classList.remove("confirm");del.textContent="Видалити"},3000);return}
+          db.doc("ideas/"+it.id).delete().catch(()=>{})};li.append(del)} else li.append(document.createElement("span"));
+      ul.append(li);
+    }
+  }
+  const IDEAS=[
+    ["Трекер підписок з нагадуваннями","Вносиш усі підписки, сторінка рахує, скільки йде на місяць, і за 3 дні до списання шле нагадування."],
+    ["Бот «що приготувати з того, що є»","Фотографуєш холодильник або пишеш продукти, бот пропонує 3 страви і список, чого бракує."],
+    ["Калькулятор розмитнення авто","Вводиш рік, об’єм і ціну на аукціоні, отримуєш повну вартість під ключ з доставкою і митом."],
+    ["Дашборд статусів сервісів","Одна сторінка, яка пінгує статус-сторінки сервісів, якими користуєшся, і показує, хто зараз лежить."],
+    ["Генератор тест-кейсів з ТЗ","Вставляєш опис фічі, отримуєш чекліст позитивних, негативних і граничних кейсів."],
+    ["Мапа спортивних майданчиків міста","Карта кортів з цінами, годинами і кнопкою «знайти партнера на гру»."],
+    ["Спільний бюджет на двох","Кожен вносить витрати з телефона, сторінка показує, хто кому винен і куди йдуть гроші."],
+    ["Валідатор HMAC-підписів вебхуків","Вставляєш payload, секрет і підпис, сторінка показує, чи збігається, і де саме помилка."],
+    ["Таймер «30 хвилин навчання» зі стріком","Помодоро-таймер, який веде серію днів і показує теплову карту, як на GitHub."],
+    ["Конвертер чеків у таблицю","Фото чека перетворюється на рядки з категоріями, які можна скопіювати в Excel."],
+    ["Планувальник поїздки за бюджетом","Вказуєш місто, дати і суму, отримуєш план по днях з орієнтовними витратами."],
+    ["Журнал обслуговування авто","Записуєш заміни масла, фільтрів і ремонти, сторінка нагадує, коли наступне ТО."],
+    ["Трекер прочитаних книг з цитатами","Додаєш книгу, позначаєш прогрес і зберігаєш найкращі думки, наприкінці року отримуєш підсумок."],
+    ["Генератор ідей для побачень у твоєму місті","Обираєш бюджет і настрій, отримуєш ідею на вечір з конкретним місцем."],
+    ["Odoo-модуль «онлайн-запис на послуги»","Клієнт обирає послугу і час на сайті, запис падає в календар виконавця в Odoo."],
+    ["Порівняння кешбеку карток","Вносиш свої карти і категорії витрат, сторінка підказує, якою картою платити де."],
+    ["Мінімалістичний CRM для фрилансу","Список лідів з Upwork, статуси, наступний крок і нагадування написати клієнту."],
+    ["Шаблонізатор відповідей сапорту","Набір типових відповідей з підстановкою даних клієнта і кнопкою «скопіювати»."],
+    ["Тренер англійської на 10 хвилин","Щодня 5 нових слів з твоєї сфери і міні-діалог, у якому їх треба використати."],
+    ["Калькулятор складних відсотків для S&P 500","Показує, скільки буде через 5, 10 і 20 років при щомісячному внеску."],
+    ["Бот-нагадувач про документи","Зберігає дати закінчення паспорта, страховки, техогляду і пише за місяць до кінця."],
+    ["Сторінка «що подарувати»","Список ідей подарунків для близьких з бюджетом і датами свят."],
+    ["Логер сну і енергії","Ввечері оцінюєш день за трьома шкалами, через місяць бачиш, від чого залежить енергія."],
+    ["Мок-сервер для вебхуків","Сторінка, яка приймає тестові вебхуки, показує їх у реальному часі і дає відповісти потрібним кодом."]
+  ];
+  const THEMES=["фінанси","фітнес","подорожі","автомобілі","платежі і фінтех","продуктивність","навчання","дім і побут","стосунки","маленький бізнес","QA і тестування","Odoo і ERP","розваги","здоров’я і сон","кулінарія"];
+  let cur=null, sample=null, gen=false;
+  function showIdea(i){cur=i;$("ideaTitle").textContent=i.title;$("ideaDesc").textContent=i.pitch;$("ideaMeta").textContent=i.meta||"ідея";const sv=$("ideaSave");sv.hidden=!st.canWrite;sv.disabled=false;sv.textContent="Зберегти в список"}
+  function pickLocal(){let i,k=0;do{i=IDEAS[Math.floor(Math.random()*IDEAS.length)];k++}while(cur&&i[0]===cur.title&&k<10);showIdea({title:i[0],pitch:i[1],meta:"з добірки"})}
+  async function newIdea(){
+    if(gen)return;
+    if(!sample){pickLocal();return}
+    const btn=$("ideaNew"); gen=true; btn.disabled=true; btn.textContent="Думаю…";
+    const th=THEMES[Math.floor(Math.random()*THEMES.length)];
+    const seen=[...st.ideas.map(x=>x.text),cur?cur.title:""].filter(Boolean).slice(0,30).join("; ");
+    try{
+      const r=await sample.json("Придумай одну випадкову ідею невеликого пет-проєкту, який одна людина може завайбкодити з AI за 1–3 вечори. Стиль як у постах на Reddit у r/SideProject і r/vibecoding: конкретна корисна штука, не банальний to-do list чи погодний віджет. Тема: "+th+". Не повторюй ці ідеї: "+(seen||"немає")+". Випадкове число для різноманіття: "+Math.floor(Math.random()*1e6)+". Відповідай лише JSON без пояснень: {\"title\":\"назва до 7 слів українською\",\"pitch\":\"1–2 речення українською: що робить і для кого\",\"stack\":\"стек у 2–4 словах\"}",{cache:false,modelTier:"quick"});
+      if(r&&r.title) showIdea({title:String(r.title),pitch:String(r.pitch||""),meta:"тема: "+th+(r.stack?" · "+String(r.stack):"")}); else pickLocal();
+    }catch(e){ if(e&&(e.code==="not_granted"))sample=null; pickLocal() }
+    gen=false; btn.disabled=false; btn.textContent="Інша ідея";
+  }
+  $("ideaNew").onclick=newIdea;
+  $("ideaSave").onclick=()=>{if(!cur||!db)return;const sv=$("ideaSave");sv.disabled=true;
+    db.collection("ideas").add({text:cur.title+(cur.pitch?" — "+cur.pitch:""),status:"idea",created:Date.now()}).then(()=>{sv.textContent="Збережено ✓"}).catch(()=>{sv.disabled=false;sv.textContent="Не вдалося, ще раз"})};
+  pickLocal();
+
+  const kg=n=>n.toFixed(1).replace(".",",");
+  const sgn=n=>(n>0?"+":n<0?"−":"")+kg(Math.abs(n));
+  function renderWeight(){
+    const pts=[...st.weight].filter(w=>w.date&&w.kg>0).sort((a,b)=>a.date<b.date?-1:1);
+    const svg=$("wChart"),W=720,H=220,L=44,R=16,T=16,B=28;
+    const list=$("wList"); list.innerHTML="";
+    if(!pts.length){svg.innerHTML='<text x="360" y="110" text-anchor="middle">Графік з’явиться після першого запису ваги</text>';$("wLast").textContent="—";$("wDelta").textContent="—";$("w30").textContent="—";$("wNow").textContent="";return}
+    const tm=s=>d(s).getTime(), last=pts[pts.length-1], first=pts[0];
+    $("wLast").textContent=kg(last.kg);
+    $("wDelta").textContent=pts.length>1?sgn(last.kg-first.kg):"—";
+    const lim=tm(last.date)-30*864e5, base=pts.find(p=>tm(p.date)>=lim);
+    $("w30").textContent=base&&base!==last?sgn(last.kg-base.kg):"—";
+    $("wNow").textContent="Останній запис: "+dd(last.date);
+    let t0=tm(first.date),t1=tm(last.date); if(t1===t0){t0-=3*864e5;t1+=3*864e5}
+    const ks=pts.map(p=>p.kg); let lo=Math.floor(Math.min(...ks)-1), hi=Math.ceil(Math.max(...ks)+1);
+    const step=Math.max(1,Math.ceil((hi-lo)/5));
+    const x=v=>L+(v-t0)/(t1-t0)*(W-L-R), y=v=>T+(1-(v-lo)/(hi-lo))*(H-T-B);
+    let s="";
+    for(let v=lo;v<=hi;v+=step) s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--line)"/><text x="'+(L-8)+'" y="'+(y(v)+4)+'" text-anchor="end">'+v+'</text>';
+    for(let i=0;i<=4;i++){const tt=t0+(t1-t0)*i/4;s+='<text x="'+x(tt)+'" y="'+(H-8)+'" text-anchor="'+(i===0?"start":i===4?"end":"middle")+'">'+dd(iso(new Date(tt)))+'</text>'}
+    const poly=pts.map(p=>x(tm(p.date))+","+y(p.kg)).join(" ");
+    if(pts.length>1) s+='<polyline fill="none" stroke="var(--a-hea)" stroke-width="2.5" stroke-linejoin="round" points="'+poly+'"/>';
+    for(const p of pts) s+='<circle cx="'+x(tm(p.date))+'" cy="'+y(p.kg)+'" r="3" fill="var(--a-hea)"/>';
+    s+='<text x="'+Math.min(Math.max(x(tm(last.date)),L+20),W-R-20)+'" y="'+(y(last.kg)-10)+'" text-anchor="middle" style="fill:var(--fg)">'+kg(last.kg)+'</text>';
+    svg.innerHTML=s;
+    for(const p of pts.slice(-5).reverse()){
+      const li=document.createElement("li"); li.className="wrow";
+      const a=document.createElement("span"); a.textContent=dd(p.date)+" "+d(p.date).getFullYear();
+      const b=document.createElement("span"); b.className="num"; b.textContent=kg(p.kg)+" кг";
+      li.append(a,b);
+      if(st.canWrite){const del=document.createElement("button");del.className="del";del.type="button";del.textContent="Видалити";
+        del.onclick=()=>{if(!del.classList.contains("confirm")){del.classList.add("confirm");del.textContent="Точно?";setTimeout(()=>{del.classList.remove("confirm");del.textContent="Видалити"},3000);return}
+          db.doc("weight/"+p.id).delete().catch(()=>{})};li.append(del)} else li.append(document.createElement("span"));
+      list.append(li);
+    }
+  }
+  function renderAll(){renderSprint();renderHabit();renderIdeas();renderWeight();renderRoad();renderChart();$("capForm").hidden=!st.canWrite;$("wForm").hidden=!st.canWrite;$("ideaSave").hidden=!st.canWrite||!cur}
+
+  const nowM=today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0"); $("capMonth").value=nowM;
+
+  $("addForm").addEventListener("submit",e=>{e.preventDefault();const t=$("addText").value.trim();if(!t||!db)return;
+    const n=st.goals.filter(g=>g.sprint===st.sel).reduce((m,g)=>Math.max(m,g.order??0),0)+1;
+    db.collection("goals").add({sprint:st.sel,area:$("addArea").value,text:t,done:false,order:n}).then(()=>{$("addText").value=""}).catch(()=>{$("scoreNote").textContent="Не вдалося зберегти ціль. Спробуй ще раз."})});
+  $("wDate").value=iso(today);
+  $("wForm").addEventListener("submit",e=>{e.preventDefault();const dt=$("wDate").value,v=Number(String($("wKg").value).replace(",","."));if(!dt||!(v>20&&v<300)||!db)return;
+    db.doc("weight/"+dt).set({date:dt,kg:Math.round(v*10)/10}).then(()=>{$("wKg").value=""}).catch(()=>{$("wNow").textContent="Не вдалося зберегти вагу."})});
+  const num=id=>Number(String($(id).value).replace(",","."))||0;
+  let rateTouched=false, rateInfo=null;
+  async function getRate(){
+    const tries=[
+      ["https://api.frankfurter.dev/v1/latest?base=USD&symbols=EUR",j=>[j.rates&&j.rates.EUR,j.date]],
+      ["https://api.frankfurter.app/latest?from=USD&to=EUR",j=>[j.rates&&j.rates.EUR,j.date]],
+      ["https://open.er-api.com/v6/latest/USD",j=>[j.rates&&j.rates.EUR,(j.time_last_update_utc||"").slice(5,16)]]
+    ];
+    for(const [u,f] of tries){
+      try{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),6000);
+        const r=await fetch(u,{signal:ctl.signal,cache:"no-store"});clearTimeout(tm);if(!r.ok)continue;
+        const [rate,date]=f(await r.json());if(rate>0)return {rate:+rate.toFixed(5),date:date||iso(new Date())};
+      }catch(e){}
+    }
+    return null;
+  }
+  async function refreshRate(){
+    $("rateNote").textContent="Беру актуальний курс…";
+    const r=await getRate();
+    if(r){rateInfo=r;if(!rateTouched)$("capRate").value=r.rate;$("rateNote").textContent="Курс ЄЦБ: 1 $ = "+r.rate+" € · "+r.date}
+    else $("rateNote").textContent="Не вдалося отримати курс, впиши вручну.";
+    capTotal();
+  }
+  function capTotal(){const e=num("capEur"),u=num("capUsd"),r=num("capRate"),t=e+u*r;
+    $("capSum").textContent=(e||u)?"Разом: "+fmt(t)+" €"+(u?" ("+fmt(e)+" € + "+fmt(u)+" $ × "+r+")":""):"";return {e,u,r,t}}
+  ["capEur","capUsd","capRate"].forEach(i=>$(i).addEventListener("input",()=>{if(i==="capRate")rateTouched=true;capTotal()}));
+  $("capForm").addEventListener("submit",async e=>{e.preventDefault();const mo=$("capMonth").value;if(!mo||!db)return;
+    const btn=$("capForm").querySelector("button[type=submit]");
+    if(num("capUsd")>0&&!rateTouched){btn.disabled=true;btn.textContent="Беру курс…";await refreshRate();btn.disabled=false;btn.textContent="Записати"}
+    const c=capTotal();if(!(c.t>0)||(c.u>0&&!(c.r>0)))return;
+    db.doc("capital/"+mo).set({month:mo,amount:Math.round(c.t),eur:c.e,usd:c.u,rate:c.r,rateDate:rateInfo&&!rateTouched?rateInfo.date:"вручну"}).then(()=>{$("capEur").value="";$("capUsd").value="";$("capSum").textContent="";rateTouched=false})
+      .catch(()=>{$("capNow").textContent="Не вдалося зберегти суму."})});
+  $("capSum").insertAdjacentHTML("afterend",'<p class="note" id="rateNote"></p>');
+  refreshRate();
+
+  renderAll();
+
+  (async()=>{
+    if(!window.SBDB){$("spTitle").textContent="Не налаштовано Supabase (див. README)";return}
+    const auth=await window.SBDB.auth();
+    if(!auth.session){$("authPanel").hidden=false;$("spTitle").textContent="Увійди, щоб бачити план";
+      $("authForm").addEventListener("submit",async e=>{e.preventDefault();$("authMsg").textContent="Надсилаю…";
+        const err=await window.SBDB.signIn($("authEmail").value.trim());
+        $("authMsg").textContent=err?"Помилка: "+err:"Перевір пошту і відкрий посилання на цьому пристрої."});
+      return}
+    $("who").hidden=false;$("who").innerHTML="";$("who").append(document.createTextNode(auth.email+" · "));
+    const out=document.createElement("button");out.className="del";out.type="button";out.textContent="Вийти";out.onclick=()=>window.SBDB.signOut();$("who").append(out);
+    const timer=setTimeout(()=>{if(!st.loaded)$("spTitle").textContent="Не вдається завантажити план. Перевір з'єднання."},10000);
+    db=await window.SBDB.open();
+    st.canWrite=true;
+    const snapList=(q,key,map)=>q.onSnapshot(s=>{st[key]=s.docs.map(x=>map?map(x):({id:x.id,...x.data()}));if(key==="sprints"){st.sprints.sort((a,b)=>a.n-b.n);if(st.sel==null&&st.sprints.length)st.sel=activeSprint().n;st.loaded=true;clearTimeout(timer)}renderAll()},()=>{});
+    snapList(db.collection("sprints"),"sprints");
+    snapList(db.collection("goals"),"goals");
+    snapList(db.collection("capital"),"capital");
+    snapList(db.collection("ideas"),"ideas");
+    snapList(db.collection("weight"),"weight");
+    db.doc("habits/odoo").onSnapshot(s=>{st.habit=s.exists?s.data():{days:[]};renderAll()},()=>{});
+    db.doc("meta/plan").onSnapshot(s=>{st.meta=s.exists?s.data():null;renderAll()},()=>{});
+  })();
+})();
+</script>
+
+</body></html>
